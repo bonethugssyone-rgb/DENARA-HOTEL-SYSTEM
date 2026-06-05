@@ -282,15 +282,30 @@ elif pilihan_menu == "🍽️ Room Service (DenaraEats)":
     with k1:
         st.subheader("Input Menu Makanan")
         no_kmr = st.selectbox("Nomor Kamar Pemesan:", list(st.session_state.kamar_data.keys()))
-        pilih_makanan = st.multiselect("Pilih Menu:", ["Nasi Goreng Gila (Rp 35.000)", "Mie Goreng Kampung (Rp 30.000)", "Es Teh Manis (Rp 10.000)", "Kopi Susu Aren (Rp 20.000)"])
-        
-        # Rumus manual kalkulasi hitung belanja makanan-minuman
-        nota_makanan = 0
-        for m in pilih_makanan:
-            if "Gila" in m: nota_makanan += 35000
-            elif "Mie" in m: nota_makanan += 30000
-            elif "Teh" in m: nota_makanan += 10000
-            elif "Kopi" in m: nota_makanan += 20000
+       # ==========================================
+# SESSION STATE UNTUK MENYIMPAN PILIHAN
+# ==========================================
+if "selected_menu" not in st.session_state:
+    st.session_state.selected_menu = []
+
+# Multiselect pakai session_state
+makanan = st.multiselect(
+    "Pilih Menu",
+    list(MENU_MAKANAN.keys()),
+    default=st.session_state.selected_menu
+)
+
+# Simpan pilihan ke session
+st.session_state.selected_menu = makanan
+
+if makanan:
+    st.write("🛒 Menu dipilih:")
+    for m in makanan:
+        st.write(f"- {m} (Rp {MENU_MAKANAN[m]:,})")
+
+# Total harga real time
+       total = sum(MENU_MAKANAN[m] for m in makanan)
+st.metric("Total Harga", f"Rp {total:,}")
             
         if st.button("Kirim Orderan ke Dapur 🍳"):
             if pilih_makanan:
@@ -443,6 +458,45 @@ elif pilihan_menu == "🏷️ Info Voucher Promo":
         st.warning("### Code: SMART10\nDiskon potongan hemat 10% khusus pengguna kartu kredit.")
 
 # --- MENU12: DASHBOARD FEEDBACK PELANGGAN ---
+elif pilihan_menu == "⭐ Ulasan Kepuasan":
+    st.title("📊 Dashboard Feedback Pelanggan")
+
+    # Jika belum ada data
+    if not st.session_state.ulasan_log:
+        st.info("Belum ada data ulasan pelanggan.")
+    else:
+        data = st.session_state.ulasan_log
+
+        # ==========================================
+        # METRIC RINGKASAN
+        # ==========================================
+        total_ulasan = len(data)
+        rata_rating = sum([u["rating"] for u in data]) / total_ulasan
+        rating_tertinggi = max([u["rating"] for u in data])
+        rating_terendah = min([u["rating"] for u in data])
+
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Total Ulasan", total_ulasan)
+        col2.metric("Rata-rata Rating", f"{rata_rating:.2f} ⭐")
+        col3.metric("Tertinggi", f"{rating_tertinggi} ⭐")
+        col4.metric("Terendah", f"{rating_terendah} ⭐")
+
+        st.markdown("---")
+
+        # ==========================================
+        # DISTRIBUSI RATING (GRAFIK)
+        # ==========================================
+        import pandas as pd
+
+        df = pd.DataFrame(data)
+        rating_count = df["rating"].value_counts().sort_index()
+
+        st.subheader("📈 Distribusi Rating")
+        st.bar_chart(rating_count)
+
+        st.markdown("---")
+
+        # --- MENU: DASHBOARD FEEDBACK PELANGGAN ---
 elif pilihan_menu == "⭐ Ulasan Kepuasan":
     st.title("📊 Dashboard Feedback Pelanggan")
 

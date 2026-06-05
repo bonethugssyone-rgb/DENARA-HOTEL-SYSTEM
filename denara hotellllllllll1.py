@@ -11,11 +11,44 @@ st.set_page_config(
     layout="wide",
     page_icon="🏨"
 )
+# ==========================================
+# UI STYLE (SOFT PINK)
+# ==========================================
+st.markdown("""
+<style>
+.main {background-color: #FFF1F2;}
+section[data-testid="stSidebar"] {background-color: #FFE4E6;}
+h1, h2, h3 {color:#BE185D;}
+.stButton>button {
+    background-color:#F472B6;
+    color:white;
+    border-radius:10px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ==========================================
 # INISIALISASI DATA SIMULASI (SESSION STATE)
 # ==========================================
 
+#LOGIN
+if "login" not in st.session_state:
+    st.session_state.login = False
+if not st.session_state.login:
+    st.title("🔐 Login Hotel")
+
+    user = st.text_input("Username")
+    pw = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if user == "admin" and pw == "123":
+            st.session_state.login = True
+            st.session_state.role = "admin"
+        else:
+            st.error("Login gagal")
+
+    st.stop()
+    
 # Penampung data master seluruh kamar dari lantai 1 sampai 5 (di RAM)
 if "kamar_data" not in st.session_state:
     st.session_state.kamar_data = {
@@ -282,46 +315,49 @@ elif pilihan_menu == "🍽️ Room Service (DenaraEats)":
     with k1:
         st.subheader("Input Menu Makanan")
         no_kmr = st.selectbox("Nomor Kamar Pemesan:", list(st.session_state.kamar_data.keys()))
-       # ==========================================
+# ==========================================
 # SESSION STATE UNTUK MENYIMPAN PILIHAN
 # ==========================================
-if "selected_menu" not in st.session_state:
-    st.session_state.selected_menu = []
+elif pilihan_menu == "🍽️ Room Service (DenaraEats)":
+    st.title("🍽️ Room Service Order")
 
-# Multiselect pakai session_state
-makanan = st.multiselect(
-    "Pilih Menu",
-    list(MENU_MAKANAN.keys()),
-    default=st.session_state.selected_menu
-)
+    no_kmr = st.selectbox("Nomor Kamar:", list(st.session_state.kamar_data.keys()))
 
-# Simpan pilihan ke session
-st.session_state.selected_menu = makanan
+    if "keranjang" not in st.session_state:
+        st.session_state.keranjang = []
 
-if makanan:
-    st.write("🛒 Menu dipilih:")
-    for m in makanan:
-        st.write(f"- {m} (Rp {MENU_MAKANAN[m]:,})")
+    menu_makanan = {
+        "Nasi Goreng": 25000,
+        "Mie Goreng": 20000,
+        "Ayam Bakar": 30000
+    }
 
-# Total harga real time
-       total = sum(MENU_MAKANAN[m] for m in makanan)
-st.metric("Total Harga", f"Rp {total:,}")
-            
-        if st.button("Kirim Orderan ke Dapur 🍳"):
-            if pilih_makanan:
-                # Masukin data belanjaan baru ke ujung index array makanan_log (.append)
-                st.session_state.makanan_log.append({
-                    "kamar": no_kmr, "pesanan": ", ".join(pilih_makanan), "total": nota_makanan, "status": "Diproses"
-                })
-                st.success("Orderan berhasil dikirim ke dapur!")
-            else:
-                st.warning("Pilih menu makanan dulu!")
-                
-    with k2:
-        st.subheader("📋 Status Pengantaran Dapur")
-        df_rs = pd.DataFrame(st.session_state.makanan_log)
-        if not df_rs.empty:
-            st.dataframe(df_rs, use_container_width=True)
+    pilih = st.selectbox("Pilih Menu", list(menu_makanan.keys()))
+
+    if st.button("Tambah ke Keranjang"):
+        st.session_state.keranjang.append(pilih)
+
+    st.markdown("### 🛒 Keranjang")
+    total = 0
+    for item in st.session_state.keranjang:
+        harga = menu_makanan[item]
+        st.write(f"{item} - Rp {harga}")
+        total += harga
+
+    st.write(f"**Total: Rp {total}**")
+
+    if st.button("Kirim Orderan ke Dapur 🍳"):
+        if st.session_state.keranjang:
+            st.session_state.makanan_log.append({
+                "kamar": no_kmr,
+                "pesanan": ", ".join(st.session_state.keranjang),
+                "total": total,
+                "status": "Diproses"
+            })
+            st.session_state.keranjang = []
+            st.success("Pesanan dikirim!")
+        else:
+            st.warning("Keranjang kosong!")
 
 # --- MENU 6: PENCARIAN DATA TAMU ---
 elif pilihan_menu == "🔍 Cari Reservasi":
@@ -380,11 +416,25 @@ elif pilihan_menu == "💳 Kasir & Pembayaran":
         biaya_addon = len(dt["add_ons"]) * 50000
         
         subtotal = harga_pokok + biaya_late + biaya_addon
-        
-        kode_kupon = st.text_input("Ketik Kode Kupon Voucher:")
-        diskon = 100000 if kode_kupon.strip() == "DENARADEAL" else 0
-        
-        total_tagihan = max(0, subtotal - diskon)
+
+# =========================
+# PROMO (FIX)
+# =========================
+diskon = 0
+promo = st.session_state.get("promo_aktif", None)
+
+if promo == "DENARADEAL":
+    diskon = 100000
+elif promo == "SMART10":
+    diskon = subtotal * 0.1
+
+# =========================
+# TOTAL
+# =========================
+ppn = subtotal * 0.11
+total_tagihan = subtotal + ppn - diskon
+      
+       
         poin = int(total_tagihan / 10000) # Kasih bonus loyalty reward poin per kelipatan transaksi 10 ribu
         
         # Cetak tampilan teks nota kuitansi manual
@@ -399,7 +449,9 @@ elif pilihan_menu == "💳 Kasir & Pembayaran":
         ------------------------------------------------
         Biaya Kamar     : Rp {harga_pokok:,}
         Biaya Addons    : Rp {biaya_late + biaya_addon:,}
-        Diskon Voucher  : -Rp {diskon:,}
+        PPN 11%         : Rp {ppn:,}
+        Diskon Voucher  : -Rp {diskon:,} 
+        Promo           : {promo}
         ------------------------------------------------
         TOTAL BAYAR     : Rp {total_tagihan:,}
         Bonus Poin      : +{poin} DenaraPoints
@@ -407,7 +459,7 @@ elif pilihan_menu == "💳 Kasir & Pembayaran":
         """, language="text")
         
         cara_bayar = st.selectbox("Pilih Metode Bank Transaksi:", ["BCA Transfer Direct", "Mandiri Virtual Account", "DenaraPay"])
-        
+        status_bayar = st.selectbox("Status Pembayaran", ["PAID (Lunas)", "DP 30%"])
         if st.button("Finalisasi Transaksi & Cetak 📑", type="primary"):
             # Append / masukin record baru ke dalam data riwayat log pembayaran transaksi
             st.session_state.reservasi_log.append({
@@ -415,7 +467,9 @@ elif pilihan_menu == "💳 Kasir & Pembayaran":
                 "nama": dt["nama"], "hp": dt["hp"], "email": dt["email"],
                 "kamar": dt["kamar"], "tipe": dt["tipe"], "bed_type": dt["bed_type"],
                 "check_in": dt["check_in"], "check_out": dt["check_out"], "status": "Booking",
-                "total_biaya": total_tagihan, "status_bayar": "PAID", "metode": cara_bayar,
+                "total_biaya": total_tagihan,
+                "status_bayar": status_bayar,
+                "metode": cara_bayar,
                 "add_ons": dt["add_ons"], "late_checkout": dt["late_checkout"], "poin_earned": poin
             })
             # Ganti warna denah kamar jadi kuning (booked)
@@ -432,71 +486,54 @@ elif pilihan_menu == "📜 Histori Transaksi":
         st.table(pd.DataFrame(st.session_state.reservasi_log)[["id", "nama", "metode", "total_biaya", "status_bayar"]])
 
 # --- MENU 10: REPORT POIN REWARD LOYALITAS VIP ---
-elif pilihan_menu == "👤 Poin Loyalitas VIP":
-    st.title("👤 Akumulasi Poin Reward Pelanggan")
-    if st.session_state.reservasi_log:
-        df_res = pd.DataFrame(st.session_state.reservasi_log)
-        # Kelompokkan total akumulasi perolehan poin berdasarkan nama pelanggan
-        df_poin = df_res.groupby("nama")["poin_earned"].sum().reset_index()
-        
-        def hitung_tier(p):
-            if p >= 100: return "💎 VIP Member"
-            if p >= 50: return "🥇 Gold Member"
-            return "🥈 Silver Member"
-            
-        df_poin["Kategori Tier"] = df_poin["poin_earned"].apply(hitung_tier)
-        st.table(df_poin.rename(columns={"nama": "Nama Tamu", "poin_earned": "Total Poin"}))
+ elif pilihan_menu == "👤 Loyalitas & Member":
+
+        st.subheader("👤 Program Loyalitas Customer")
+
+        st.info("Poin otomatis didapat dari transaksi pembayaran")
+
+        nama = st.text_input("Nama Customer")
+
+        # simulasi ambil data
+        poin = st.number_input("Total Poin", min_value=0, value=100)
+
+        level = "Regular"
+        if poin >= 500:
+            level = "Gold"
+        elif poin >= 1000:
+            level = "Platinum"
+
+        st.write(f"Level Member: **{level}**")
+
+        if st.button("Tukar Poin"):
+            if poin >= 100:
+                st.success("🎁 Poin berhasil ditukar dengan voucher!")
+            else:
+                st.warning("⚠️ Poin belum cukup")
 
 # --- MENU 11: INFO KODE PROMO AKTIF ---
 elif pilihan_menu == "🏷️ Info Voucher Promo":
     st.title("🏷️ Kode Promo Aktif")
     st.markdown("---")
-    col_p1, col_p2 = st.columns(2)
-    with col_p1:
-        st.info("### Code: DENARADEAL\nPotongan instan Rp 100.000 tanpa batas minimum.")
-    with col_p2:
-        st.warning("### Code: SMART10\nDiskon potongan hemat 10% khusus pengguna kartu kredit.")
 
+    st.success("Pilih promo yang ingin digunakan")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("🎟️ DENARADEAL"):
+            st.session_state.promo_aktif = "DENARADEAL"
+            st.success("✅ Promo 100K aktif!")
+
+    with col2:
+        if st.button("💳 SMART10"):
+            st.session_state.promo_aktif = "SMART10"
+            st.success("✅ Diskon 10% aktif!")
+
+    st.markdown("---")
+    st.info(f"Promo aktif saat ini: {st.session_state.promo_aktif}")
+    
 # --- MENU12: DASHBOARD FEEDBACK PELANGGAN ---
-elif pilihan_menu == "⭐ Ulasan Kepuasan":
-    st.title("📊 Dashboard Feedback Pelanggan")
-
-    # Jika belum ada data
-    if not st.session_state.ulasan_log:
-        st.info("Belum ada data ulasan pelanggan.")
-    else:
-        data = st.session_state.ulasan_log
-
-        # ==========================================
-        # METRIC RINGKASAN
-        # ==========================================
-        total_ulasan = len(data)
-        rata_rating = sum([u["rating"] for u in data]) / total_ulasan
-        rating_tertinggi = max([u["rating"] for u in data])
-        rating_terendah = min([u["rating"] for u in data])
-
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Total Ulasan", total_ulasan)
-        col2.metric("Rata-rata Rating", f"{rata_rating:.2f} ⭐")
-        col3.metric("Tertinggi", f"{rating_tertinggi} ⭐")
-        col4.metric("Terendah", f"{rating_terendah} ⭐")
-
-        st.markdown("---")
-
-        # ==========================================
-        # DISTRIBUSI RATING (GRAFIK)
-        # ==========================================
-        import pandas as pd
-
-        df = pd.DataFrame(data)
-        rating_count = df["rating"].value_counts().sort_index()
-
-        st.subheader("📈 Distribusi Rating")
-        st.bar_chart(rating_count)
-
-        st.markdown("---")
-
-        # --- MENU: DASHBOARD FEEDBACK PELANGGAN ---
 elif pilihan_menu == "⭐ Ulasan Kepuasan":
     st.title("📊 Dashboard Feedback Pelanggan")
 

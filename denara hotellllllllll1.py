@@ -670,4 +670,4 @@ elif pilihan_menu == "🛟 Pusat Bantuan":
     with st.expander("Bagaimana cara cancel status kamar?"):
         st.write("Akses menu '📋 Data Master Log', pilih ID Invoice target, lalu lakukan update perubahan status check-out.")
     with st.expander("Apakah data hilang kalau browser ditutup?"):
-        st.write("Iya, karena program ini murni berjalan di memori lokal runtime RAM web (session state) tanpa database eksternal.") . jadi jika dalam kode source saya lebih masuk judulnya sistem reservasi hotel atau reservasi hotel?
+        st.write("Iya, karena program ini murni berjalan di memori lokal runtime RAM web (session state) tanpa database eksternal.") . 

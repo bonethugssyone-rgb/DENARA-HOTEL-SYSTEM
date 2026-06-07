@@ -21,7 +21,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# DATA MASTER & FASILITAS KAMAR (BED TYPE NYA UDAH DIHAPUS YAA)
+# DATA MASTER & FASILITAS KAMAR (FORMAL, BED TYPE UDAH ILANG)
 # ==========================================
 TARIF_KAMAR = {
     "Standard Room": 650000, 
@@ -30,12 +30,11 @@ TARIF_KAMAR = {
     "Suite Room": 9500000
 }
 
-# Di sini tipe bed/kasur udah ilang, diganti fasilitas pelengkap lainnya
 FASILITAS_KAMAR = {
-    "Standard Room": ["Free Wi-Fi", "AC Dingin", "Smart TV 32\"", "Shower", "Air Mineral Gratis"],
-    "Superior Room": ["Free Wi-Fi", "AC Dingin", "Smart TV 43\"", "Water Heater", "Kulkas Mini", "Coffee & Tea Maker"],
-    "Deluxe Room": ["Free Wi-Fi", "AC Dingin", "Smart TV 55\"", "Bathtub Mewah", "Mini Bar", "Safety Box", "Balkon Nyantai"],
-    "Suite Room": ["Free Wi-Fi", "AC Dingin", "Smart TV 65\"", "Jacuzzi Pribadi", "Premium Mini Bar", "Ruang Tamu Terpisah", "Butler Service 24 Jam", "Kolam Renang Pribadi"]
+    "Standard Room": ["Free Wi-Fi", "Air Conditioning", "Smart TV 32\"", "Shower Bathroom", "Complimentary Water"],
+    "Superior Room": ["Free Wi-Fi", "Air Conditioning", "Smart TV 43\"", "Water Heater", "Mini Refrigerator", "Coffee & Tea Maker"],
+    "Deluxe Room": ["Free Wi-Fi", "Air Conditioning", "Smart TV 55\"", "Luxury Bathtub", "Mini Bar", "Safety Deposit Box", "Private Balcony"],
+    "Suite Room": ["Free Wi-Fi", "Air Conditioning", "Smart TV 65\"", "Private Jacuzzi", "Premium Mini Bar", "Separate Living Room", "24/7 Butler Service", "Private Swimming Pool"]
 }
 
 MENU_MAKANAN = {
@@ -46,7 +45,7 @@ MENU_MAKANAN = {
     "Kopi Susu Aren": 20000
 }
 
-# Tempat nyimpen status data kamar lantai 1 sampe 5
+# nampung status data kamar lantai 1 sampe 5, pake list of dict biar dinamis
 if "kamar_data" not in st.session_state:
     st.session_state.kamar_data = [
         # LANTAI 1
@@ -74,7 +73,7 @@ if "kamar_data" not in st.session_state:
         {"No Kamar": "503", "Tipe Kamar": "Suite Room", "Status": "🟩 Tersedia"},
     ]
 
-# Wadah array dinamis buat nampung log aktivitas hotel
+# wadah array dinamis buat nampung segala rupa log aktivitas hotel
 if "reservasi_log" not in st.session_state: st.session_state.reservasi_log = []
 if "histori_transaksi" not in st.session_state: st.session_state.histori_transaksi = []
 if "log_pembatalan" not in st.session_state: st.session_state.log_pembatalan = []
@@ -130,7 +129,7 @@ if pilihan_menu == "🏠 Dashboard":
     with col1:
         st.markdown('<div class="card"><h3>👑 Kamar Paling Laris</h3>', unsafe_allow_html=True)
         st.write("**Suite Room (Lantai 5 VIP)**")
-        st.caption("Fasilitas Andalan: Jacuzzi Pribadi & Kolam Renang Sendiri")
+        st.caption("Fasilitas Andalan: Private Jacuzzi & Private Swimming Pool")
         st.progress(0.95)
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
@@ -141,17 +140,17 @@ if pilihan_menu == "🏠 Dashboard":
 
 # --- 2. RESERVASI BARU ---
 elif pilihan_menu == "📝 Reservasi Baru":
-    st.title("📝 Form Reservasi Hotel (Gak Pake Ribet)")
+    st.title("📝 Form Reservasi Hotel")
     col_kiri, col_kanan = st.columns([1.5, 1])
 
     with col_kiri:
         st.subheader("Isi Data Diri Dulu Yuk")
-        nama = st.text_input("Nama Lengkap (Sesuai KTP ya)")
-        hp = st.text_input("Nomor WA Sing Aktif")
-        email = st.text_input("Email Kamu")
+        nama = st.text_input("Nama Lengkap (Sesuai KTP)")
+        hp = st.text_input("Nomor WhatsApp Aktif")
+        email = st.text_input("Alamat Email")
         pilihan_tipe = st.selectbox("Mau Kamar Tipe Apa?", list(TARIF_KAMAR.keys()))
         
-        # Nampilin daftar fasilitas kamar secara real-time pas diklik
+        # nampilin fasilitas kamar secara live pas diklik ganti tipe
         st.markdown("**Fasilitas Yang Bakal Kamu Dapet:**")
         for fas in FASILITAS_KAMAR[pilihan_tipe]:
             st.markdown(f'<span class="facility-tag">✔️ {fas}</span>', unsafe_allow_html=True)
@@ -166,7 +165,7 @@ elif pilihan_menu == "📝 Reservasi Baru":
         saran = "Standard Room" if jml_tamu <= 2 else ("Superior/Deluxe" if jml_tamu <= 4 else "Suite Room")
         st.info(f"Karena kamu bawa {jml_tamu} orang, cocoknya pilih **{saran}**.")
         
-        # Nyari kamar kosong di array master pake trik looping traversal
+        # nyari kamar kosong di array master pake trik looping traversal
         kamar_cocok = next((k for k in st.session_state.kamar_data if k["Tipe Kamar"] == pilihan_tipe and k["Status"] == "🟩 Tersedia"), None)
         
         if kamar_cocok:
@@ -184,14 +183,14 @@ elif pilihan_menu == "📝 Reservasi Baru":
             if not nama or not kamar_cocok or tgl_out <= tgl_in:
                 st.error("Isi formnya yang bener dong, atau cek lagi tanggal check-out nya.")
             else:
-                # Ngiket data sementara ke session state biar bisa dibayar ntar
+                # ngiket data sementara ke session state biar bisa dibayar ntar
                 st.session_state.proses_checkout = {
                     "id_invoice": f"RSV-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                     "nama": nama, "hp": hp, "email": email, "kamar": kamar_cocok,
                     "tipe": pilihan_tipe, "check_in": str(tgl_in), "check_out": str(tgl_out),
                     "add_on": addons, "late_checkout": pilihan_late
                 }
-                st.session_state.voucher_terpilih = "Tanpa Voucher" # reset voucher biar fair
+                st.session_state.voucher_terpilih = "Tanpa Voucher" 
                 st.success("Sip! Data udah kesimpen, gass ke sub-menu 'Pembayaran' buat ngelunasin.")
 
 # --- 3. KATALOG KAMAR ---
@@ -217,7 +216,7 @@ elif pilihan_menu == "🗺️ Denah Kamar":
                 else: 
                     st.error(f"🟨 {detail['No Kamar']}\n(Booked)")
 
-# --- 5. PEMBAYARAN RESERVASI (BUTTON VOUCHER TIMBUL) ---
+# --- 5. PEMBAYARAN RESERVASI ---
 elif pilihan_menu == "💳 Pembayaran":
     st.title("💳 Menu Pembayaran Billing Kamar")
     if "proses_checkout" not in st.session_state:
@@ -231,7 +230,7 @@ elif pilihan_menu == "💳 Pembayaran":
     biaya_extra = (50000 if "Late" in dt["late_checkout"] else 0) + (50000 if "Breakfast" in dt["add_on"] else 0) + (150000 if "Airport Pickup" in dt["add_on"] else 0)
     subtotal = harga_pokok + biaya_extra
 
-    # Tombol voucher interaktif yang menonjol pas dipencet
+    # tombol voucher interaktif yang menonjol pas dipencet
     st.subheader("🎟️ Klik Tombol Di Bawah Buat Pasang Voucher")
     v_col1, v_col2, v_col3 = st.columns(3)
     
@@ -253,7 +252,7 @@ elif pilihan_menu == "💳 Pembayaran":
             st.session_state.voucher_terpilih = "DISC10%"
             st.rerun()
 
-    # Logika ngitung diskon dari state voucher yang lagi aktif
+    # logika ngitung diskon dari state voucher yang lagi aktif
     if st.session_state.voucher_terpilih == "DENARADEAL":
         diskon = 100000
     elif st.session_state.voucher_terpilih == "DISC10%":
@@ -286,7 +285,7 @@ elif pilihan_menu == "💳 Pembayaran":
     status_bayar = st.selectbox("Opsi Bayar", ["PAID (Langsung Lunas)", "DP Dulu 30%"])
 
     if st.button("Konfirmasi Bayar & Cetak Kunci Kamar ✔️", type="primary"):
-        # Masukin data ke array list log utama hotel
+        # masukin data ke array list log utama hotel
         st.session_state.reservasi_log.append({
             "id": dt["id_invoice"], "nama": dt["nama"], "hp": dt["hp"], "email": dt["email"],
             "kamar": dt["kamar"]["No Kamar"], "tipe": dt["tipe"], "check_in": dt["check_in"],
@@ -294,7 +293,7 @@ elif pilihan_menu == "💳 Pembayaran":
             "metode": metode, "status": "🟨 Direservasi"
         })
         
-        # Ngerubah status kamarnya di array biar jadi ke-booking
+        # ngerubah status kamarnya di array biar jadi ke-booking
         for kamar in st.session_state.kamar_data:
             if kamar["No Kamar"] == dt["kamar"]["No Kamar"]:
                 kamar["Status"] = "🟨 Direservasi"
@@ -314,7 +313,7 @@ elif pilihan_menu == "🔍 Cari & Data Reservasi":
 
     keyword = st.text_input("🔍 Ketik Nama Tamu / ID Booking / No Kamar Buat Nyari:")
     
-    # Algoritma searching nyari string yang mirip di dalem array
+    # algoritma searching nyari string yang mirip di dalem array list
     hasil = [d for d in data if keyword.lower() in d["nama"].lower() or keyword.lower() in d["id"].lower() or keyword.lower() in d["kamar"].lower()] if keyword else data
 
     st.subheader("Data Tamu Yang Ketemu")
@@ -326,17 +325,36 @@ elif pilihan_menu == "🔍 Cari & Data Reservasi":
             c1, c2 = st.columns(2)
             c1.write(f"👤 **Nama:** {d['nama']} | 🚪 **Kamar:** {d['kamar']} ({d['tipe']})<br>📱 **HP:** {d['hp']} | 📧 **Email:** {d['email']}", unsafe_allow_html=True)
             c2.write(f"📅 **Jadwal:** {d['check_in']} s/d {d['check_out']}<br>💰 **Total:** Rp {int(d['total_biaya']):,} — *{d['status_bayar']}*", unsafe_allow_html=True)
+            
+            # tombol buat mindahin data dari reservasi aktif ke histori arsip
+            if st.button(f"Selesai Menginap / Check-Out Kamar {d['kamar']}", key=f"co_{i}"):
+                # balikin status kamar master jadi tersedia lagi
+                for k in st.session_state.kamar_data:
+                    if k["No Kamar"] == d["kamar"]:
+                        k["Status"] = "🟩 Tersedia"
+                
+                # di-push masuk ke array list histori transaksi arsip
+                st.session_state.histori_transaksi.append({
+                    "id": d["id"], "nama": d["nama"], "kamar": d["kamar"], "tipe": d["tipe"],
+                    "check_in": d["check_in"], "check_out": d["check_out"], "total_biaya": d["total_biaya"],
+                    "status": "✅ Selesai (Check-Out)"
+                })
+                st.session_state.reservasi_log.remove(d)
+                st.success(f"Tamu Kamar {d['kamar']} berhasil Check-Out! Data masuk ke arsip Histori.")
+                st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
 # --- 7. HISTORI & PEMBATALAN ---
 elif pilihan_menu == "📜 Histori & Pembatalan":
     st.title("📜 Menu Riwayat Selesai & Pembatalan Kamar")
-    tab_riwayat, tab_batal = st.tabs(["Arsip Kamar Selesai", "Ajukan Pembatalan Kamar"])
+    tab_riwayat, tab_batal = st.tabs(["Arsip Kamar Selesai (Histori)", "Ajukan Pembatalan Kamar"])
     
     with tab_riwayat:
+        # nampilin isi data array histori transaksi yang udah sukses checkout tadi
         if not st.session_state.histori_transaksi:
-            st.info("Belum ada history tamu yang checkout.")
+            st.info("Belum ada history tamu yang selesai menginap (Arsip Kosong).")
         else:
+            st.subheader("📋 Buku Arsip Transaksi Selesai")
             st.dataframe(pd.DataFrame(st.session_state.histori_transaksi), use_container_width=True)
             
     with tab_batal:
@@ -346,11 +364,11 @@ elif pilihan_menu == "📜 Histori & Pembatalan":
             for idx, rsv in enumerate(st.session_state.reservasi_log):
                 st.write(f"🔹 **{rsv['id']}** — Tamu: {rsv['nama']} | Kamar: {rsv['kamar']}")
                 if st.button(f"Cancel Kamar {rsv['kamar']}", key=f"btl_{idx}"):
-                    # Balikin status kamar di master data jadi kosong lagi
+                    # balikin status kamar di master data jadi kosong lagi
                     for k in st.session_state.kamar_data:
                         if k["No Kamar"] == rsv["kamar"]: k["Status"] = "🟩 Tersedia"
                     
-                    # Pindahin datanya ke array list pembatalan
+                    # pindahin datanya ke array list pembatalan
                     st.session_state.log_pembatalan.append({
                         "id": rsv["id"], "nama": rsv["nama"], "kamar": rsv["kamar"], "waktu_batal": datetime.now().strftime("%Y-%m-%d %H:%M")
                     })
@@ -362,7 +380,7 @@ elif pilihan_menu == "📜 Histori & Pembatalan":
                 st.subheader("📋 Daftar Kamar Yang Pernah Dibatalin")
                 st.dataframe(pd.DataFrame(st.session_state.log_pembatalan), use_container_width=True)
 
-# --- 8. ROOM SERVICE: PESAN MAKANAN (AKUMULASI QUANTITY JIKA MENU SAMA) ---
+# --- 8. ROOM SERVICE: PESAN MAKANAN ---
 elif pilihan_menu == "🍽️ Pesan Makanan":
     st.title("🍽️ Room Service Kuliner - Kirim Ke Kamar")
     
@@ -372,7 +390,7 @@ elif pilihan_menu == "🍽️ Pesan Makanan":
     total_order = 0
     items_dipesan = []
     
-    # Looping buat nampilin list menu makanan tanpa takut datanya ilang pas diinput
+    # looping biar input quantity angka gak ngeriset menu makanannya
     for menu, harga in MENU_MAKANAN.items():
         qty = st.number_input(f"{menu} (Rp {harga:,})", min_value=0, step=1, key=f"food_{menu}")
         if qty > 0:
@@ -383,13 +401,12 @@ elif pilihan_menu == "🍽️ Pesan Makanan":
     
     if st.button("Pesan Sekarang & Kirim Ke Dapur 🛒"):
         if total_order > 0:
-            # Algoritma nyari tau apakah nomor kamar ini udah pernah mesen makanan tapi belum bayar
+            # nyari tau nomor kamar ini udah punya bill menggantung apa belum
             kamar_exist = next((m for m in st.session_state.makanan_log if m["kamar"] == no_kmr and m["status"] == "Belum Bayar"), None)
             
             if kamar_exist:
-                # Kalau kamarnya udah ada di antrian dapur, kita akumulasiin aja itemnya
+                # akumulasiin itemnya aja kalo kamarnya sama
                 for item_baru in items_dipesan:
-                    # Cari tau menu makanannya udah ada di list pesanan kamar itu apa belum
                     idx_makanan = -1
                     for idx, s in enumerate(kamar_exist["pesanan_detail"]):
                         if s["item"] == item_baru["item"]:
@@ -397,19 +414,19 @@ elif pilihan_menu == "🍽️ Pesan Makanan":
                             break
                     
                     if idx_makanan != -1:
-                        # Kalau menunya sama, tambahin qty ama subtotalnya (Gak bikin baris baru)
+                        # nambahin qty sama subtotal porsi menu yang sama (gak bikin baris baru)
                         kamar_exist["pesanan_detail"][idx_makanan]["qty"] += item_baru["qty"]
                         kamar_exist["pesanan_detail"][idx_makanan]["subtotal"] += item_baru["subtotal"]
                     else:
-                        # Kalau mesen menu yang bener-bener baru, insert aja ke array sub-list nya
+                        # masukin menu baru ke sub-array list kamar itu
                         kamar_exist["pesanan_detail"].append(item_baru)
                 
-                # Hitung ulang total harga kumulatif semuanya
                 kamar_exist["total"] = sum(x["subtotal"] for x in kamar_exist["pesanan_detail"])
                 st.success(f"Pesanan tambahan masuk buat Kamar {no_kmr}! Jumlah porsi otomatis nambah.")
             else:
-                # Kalau kamar ini bener-bener baru pertama kali mesen makanan
+                # masukin baris antrian baru ke log makanan utama
                 st.session_state.makanan_log.append({
+                    "id_order": f"FS-{datetime.now().strftime('%M%S')}",
                     "kamar": no_kmr, 
                     "pesanan_detail": items_dipesan, 
                     "total": total_order, 
@@ -419,7 +436,7 @@ elif pilihan_menu == "🍽️ Pesan Makanan":
         else:
             st.warning("Pilih dulu makanannya, masa mesen angin doang.")
 
-# --- 9. ROOM SERVICE: BAYAR ROOM SERVICE ---
+# --- 9. ROOM SERVICE: BAYAR FOOD SERVICE (STRUK & METODE BAYAR LENGKAP) ---
 elif pilihan_menu == "💳 Bayar Room Service":
     st.title("💳 Kasir Tagihan Room Service Kuliner")
     antrian_kuliner = [m for m in st.session_state.makanan_log if m["status"] == "Belum Bayar"]
@@ -429,19 +446,42 @@ elif pilihan_menu == "💳 Bayar Room Service":
     else:
         for idx, order in enumerate(antrian_kuliner):
             with st.container():
-                st.markdown(f'<div class="card"><h4>🛎️ Total Bill Makan Kamar: {order["kamar"]}</h4>', unsafe_allow_html=True)
+                st.markdown(f'<div class="card"><h4>🛎️ Bill Room Service Kamar No: {order["kamar"]}</h4>', unsafe_allow_html=True)
                 
-                st.write("**Rincian Pesanan Kuliner Yang Diakumulasi:**")
+                st.write("**Rincian Pesanan Kuliner:**")
                 for item in order["pesanan_detail"]:
-                    st.write(f"- {item['item']} sebanyak ({item['qty']} Porsi) — total: Rp {item['subtotal']:,}")
+                    st.write(f"- {item['item']} ({item['qty']} Porsi) — Rp {item['subtotal']:,}")
                     
                 st.markdown(f"Total Yang Harus Dibayar: **Rp {order['total']:,}**")
                 
-                if st.button(f"Lunasi Makanan Kamar {order['kamar']}", key=f"pay_food_{idx}"):
+                # form setup cara bayar pesanan kuliner kamar
+                pilihan_metode = st.selectbox("Pilih Jenis Pembayaran Kuliner", ["Room Charge (Masuk Bill Kamar)", "Cash / Tunai", "QRIS / E-Wallet", "Debit Card"], key=f"pay_method_{idx}")
+                
+                if st.button(f"Proses & Cetak Struk Kamar {order['kamar']}", key=f"pay_food_{idx}"):
                     order["status"] = "Selesai PAID"
-                    st.success(f"Tagihan makan Kamar {order['kamar']} sukses dibayar lunas!")
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # bikin struk kasir kuliner pake format teks rapi
+                    st.code(f"""
+    ================================================
+          DENARA HOTEL - ROOM SERVICE RECEIPT
+    ================================================
+    ID Order     : {order['id_order']}
+    Nomor Kamar  : Kamar No. {order['kamar']}
+    Waktu Bayar  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+    Jenis Bayar  : {pilihan_metode}
+    ------------------------------------------------
+    Rincian Menu Hidangan:
+    """, language="text")
+                    for item in order["pesanan_detail"]:
+                        st.code(f"    {item['item']} (x{item['qty']}) : Rp {item['subtotal']:,}", language="text")
+                    st.code(f"""------------------------------------------------
+    TOTAL BILL   : Rp {order['total']:,}
+    STATUS       : LUNAS / PAID
+    ================================================
+    Terima kasih telah menikmati kuliner kami!
+    """, language="text")
+                    
+                    st.success(f"Pembayaran kuliner kamar {order['kamar']} berhasil diverifikasi!")
 
 # --- 10. PENILAIAN HOTEL ---
 elif pilihan_menu == "⭐ Ulasan Kepuasan":

@@ -504,7 +504,7 @@ elif pilihan_menu == "📜 Histori & Pembatalan":
 
     with tab_batal:
         st.subheader("❌ Ajukan Pembatalan Kamar Mandiri")
-        input_batal = st.text_input("Masukkan ID Booking / Nama Tamu / No Kamar Kamu untuk Mengajukan Pembatalan:")
+        input_batal = st.text_input("Masukkan ID Booking / Nama Tamu / No Kamar untuk Membatalkan:")
         
         if input_batal:
             rsv = next((d for d in st.session_state.reservasi_log if 
@@ -513,21 +513,38 @@ elif pilihan_menu == "📜 Histori & Pembatalan":
                          d["kamar"] == input_batal), None)
                          
             if rsv:
-                st.warning(f"Apakah Anda benar-benar yakin ingin membatalkan pesanan Kamar No. {rsv['kamar']}?")
-                if st.button("Ya, Batalkan Pesanan Saja"):
+                # Logika Potongan Refund (misal: 20% biaya admin untuk pembatalan)
+                biaya_admin = rsv["sudah_dibayar"] * 0.20
+                nominal_refund = rsv["sudah_dibayar"] - biaya_admin
+                
+                st.warning(f"⚠️ Perhatian: Anda akan membatalkan pesanan Kamar No. {rsv['kamar']}.")
+                st.info(f"""
+                **Detail Refund:**
+                - Sudah Dibayar: Rp {int(rsv['sudah_dibayar']):,}
+                - Biaya Pembatalan (20%): -Rp {int(biaya_admin):,}
+                - **Total Dana Dikembalikan: Rp {int(nominal_refund):,}**
+                """)
+                
+                if st.button("Konfirmasi Pembatalan & Proses Refund"):
+                    # Kembalikan status kamar ke tersedia
                     for k in st.session_state.kamar_data:
                         if k["No Kamar"] == rsv["kamar"]: 
-                            k["Status"] = "🟩 Tersedia" # Kosongkan status kamar lagi
+                            k["Status"] = "🟩 Tersedia"
                     
+                    # Simpan ke log pembatalan
                     st.session_state.log_pembatalan.append({
-                        "id": rsv["id"], "nama": rsv["nama"], "kamar": rsv["kamar"], "waktu_batal": datetime.now().strftime("%Y-%m-%d %H:%M")
+                        "id": rsv["id"], 
+                        "nama": rsv["nama"], 
+                        "kamar": rsv["kamar"], 
+                        "refund": nominal_refund,
+                        "waktu_batal": datetime.now().strftime("%Y-%m-%d %H:%M")
                     })
+                    
                     st.session_state.reservasi_log.remove(rsv)
-                    st.success("Pembatalan Sukses! Kamar otomatis dilepas kembali.")
+                    st.success(f"Pembatalan Sukses! Dana sebesar Rp {int(nominal_refund):,} akan dikirim ke rekening asal dalam 1x24 jam.")
                     st.rerun()
             else:
                 st.error("Data booking aktif tidak ditemukan.")
-
 # --- 8. ROOM SERVICE: PESAN MAKANAN ---
 elif pilihan_menu == "🍽️ Pesan Makanan":
     st.title("🍽️ Room Service Kuliner - Kirim Ke Kamar")

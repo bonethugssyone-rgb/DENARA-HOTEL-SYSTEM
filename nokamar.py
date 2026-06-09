@@ -154,7 +154,6 @@ if pilihan_menu == "🏠 Dashboard":
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --- 2. RESERVASI BARU ---
-# --- 2. RESERVASI BARU ---
 elif pilihan_menu == "📝 Reservasi Baru":
     st.title("📝 Registrasi Menginap (Reservasi Baru)")
     col_kiri, col_kanan = st.columns([1.5, 1])
@@ -166,6 +165,21 @@ elif pilihan_menu == "📝 Reservasi Baru":
         email = st.text_input("Alamat Email", value="@gmail.com")
         pilihan_tipe = st.selectbox("Mau Kamar Tipe Apa?", list(TARIF_KAMAR.keys()))
         
+        # --- FITUR PILIH NO KAMAR ---
+        kamar_tersedia = [k for k in st.session_state.kamar_data if k["Tipe Kamar"] == pilihan_tipe]
+        pilihan_no_kamar = st.selectbox(
+            "Pilih Nomor Kamar:", 
+            [k["No Kamar"] + " (" + k["Status"] + ")" for k in kamar_tersedia]
+        )
+        no_kamar_terpilih = pilihan_no_kamar.split(" ")[0]
+        kamar_obj = next(k for k in st.session_state.kamar_data if k["No Kamar"] == no_kamar_terpilih)
+        
+        if kamar_obj["Status"] == "🟩 Tersedia":
+            st.success(f"Status Kamar: **Tersedia**")
+        else:
+            st.error(f"Status Kamar: **Sudah di-Booking**")
+        # -----------------------------
+        
         st.markdown("**Fasilitas Yang Bakal Kamu Dapet:**")
         for fas in FASILITAS_KAMAR[pilihan_tipe]:
             st.markdown(f'<span class="facility-tag">✔️ {fas}</span>', unsafe_allow_html=True)
@@ -176,29 +190,10 @@ elif pilihan_menu == "📝 Reservasi Baru":
         pilihan_late = st.selectbox("Mau Keluar Jam Berapa?", ["Normal Check-Out", "Late Check-Out (+Rp 50.000)"])
 
     with col_kanan:
-        # --- TAMBAHAN: STATUS KAMAR ---
-        with st.expander("🔍 Cek Ketersediaan Kamar Terkini"):
-            st.write("Daftar status kamar saat ini:")
-            for k in st.session_state.kamar_data:
-                # Menyesuaikan tampilan status sesuai permintaan Anda
-                display_status = "Tersedia" if "Tersedia" in k["Status"] else "Booking"
-                color = "green" if display_status == "Tersedia" else "red"
-                st.markdown(f"- Kamar **{k['No Kamar']}** ({k['Tipe Kamar']}): :{'green' if display_status == 'Tersedia' else 'red'}[**{display_status}**]")
-
-        st.markdown("---")
-        st.subheader("🤖 Saran Kamar Dari Bot")
-        saran = "Standard Room" if jml_tamu <= 2 else ("Superior Room" if jml_tamu <= 4 else "Suite Room")
-        st.info(f"Karena kamu bawa {jml_tamu} orang, cocoknya pilih **{saran}**.")
+        st.subheader("🤖 Konfirmasi Pesanan")
+        if kamar_obj["Status"] != "🟩 Tersedia":
+            st.error("Maaf, kamar ini tidak bisa dipilih karena sudah terisi.")
         
-        pemetaan_lantai = {"Standard Room": "1", "Superior Room": "2", "Deluxe Room": "3", "Suite Room": "4"}
-        lantai_target = pemetaan_lantai[pilihan_tipe]
-        kamar_cocok = next((k for k in st.session_state.kamar_data if k["Tipe Kamar"] == pilihan_tipe and k["Status"] == "🟩 Tersedia" and k["No Kamar"].startswith(lantai_target)), None)
-        
-        if kamar_cocok:
-            st.success(f"Kamar Ready! Kamu mendapatkan tipe **{pilihan_tipe}** dengan **No. {kamar_cocok['No Kamar']}** di Lantai {lantai_target}.")
-        else:
-            st.error(f"Waduh, tipe kamar {pilihan_tipe} di Lantai {lantai_target} saat ini sedang penuh.")
-
         st.markdown("---")
         st.subheader("🎁 Mau Tambah Fasilitas Ekstra?")
         addons = []
@@ -212,8 +207,8 @@ elif pilihan_menu == "📝 Reservasi Baru":
         if st.checkbox("Rental Skuter Listrik Seharian (+Rp 75.000)"): addons.append("Electric Scooter")
 
         if st.button("Booking & Lanjut Ke Pembayaran ➡️", type="primary"):
-            if not nama or not kamar_cocok or tgl_out <= tgl_in or email == "@gmail.com" or hp == "+62 ":
-                st.error("Isi formnya yang bener dong, pastikan semua kolom data dan nomor handphone sudah terisi lengkap.")
+            if not nama or kamar_obj["Status"] != "🟩 Tersedia" or tgl_out <= tgl_in or email == "@gmail.com" or hp == "+62 ":
+                st.error("Mohon periksa kembali data diri, pastikan kamar yang dipilih tersedia, dan tanggal sudah benar.")
             else:
                 biaya_extra_awal = (
                     (50000 if "Late" in pilihan_late else 0) + 
@@ -229,7 +224,7 @@ elif pilihan_menu == "📝 Reservasi Baru":
                 
                 st.session_state.proses_checkout = {
                     "id_invoice": f"RSV-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                    "nama": nama, "hp": hp, "email": email, "kamar": kamar_cocok,
+                    "nama": nama, "hp": hp, "email": email, "kamar": kamar_obj,
                     "tipe": pilihan_tipe, "check_in": str(tgl_in), "check_out": str(tgl_out),
                     "add_on": addons, "late_checkout": pilihan_late, "biaya_ekstra_total": biaya_extra_awal
                 }

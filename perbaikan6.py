@@ -381,41 +381,6 @@ elif pilihan_menu == "💳 Pembayaran Tiket":
     struk_text += "\n    ================================================"
     st.code(struk_text, language="text")
 
-# --- 6. CEK DETAIL & CHECK-OUT (BAGIAN PELUNASAN TOTAL) ---
-# ... (kode pencarian tamu sebelumnya sama)
-
-        if tamu:
-            sisa_bayar_kamar = tamu["total_biaya"] - tamu["sudah_dibayar"]
-            grand_total_checkout = sisa_bayar_kamar + tamu["food_charge"]
-            
-            st.markdown(f"""
-            <div class="card">
-                <h4>🧾 ID Booking: {tamu['id']}</h4>
-                <p>👤 <b>Nama Tamu:</b> {tamu['nama']}<br>
-                💰 <b>Total Tarif Kamar:</b> Rp {int(tamu['total_biaya']):,}<br>
-                💳 <b>Sudah Dibayar (DP/Lunas):</b> Rp {int(tamu['sudah_dibayar']):,}</p>
-                <hr>
-                <h4><b>📋 Rincian Pelunasan Akhir:</b></h4>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Struk pelunasan yang sangat jelas untuk tamu
-            struk_pelunasan = f"""
-    ================================================
-            STRUK PELUNASAN & CHECK-OUT
-    ================================================
-    Sisa Kamar    : Rp {int(sisa_bayar_kamar):,}
-    Tagihan Makan : Rp {int(tamu['food_charge']):,}
-    ------------------------------------------------
-    TOTAL HARUS DIBAYAR SEKARANG: Rp {int(grand_total_checkout):,}
-    ================================================
-            Terima Kasih Atas Kunjungan Anda!
-    """
-            st.code(struk_pelunasan, language="text")
-            
-            if st.button(f"Konfirmasi Pelunasan & Check-Out", type="primary"):
-                # ... (logika update status kamar dan pindah ke histori tetap sama)
-
     # Tombol buat nge-deal pembayaran dan ngerubah status kamar jadi "Direservasi" (Kuning)
     if st.button("Konfirmasi Bayar & Ambil Kode Kamar ✔️", type="primary"):
         st.session_state.reservasi_log.append({
@@ -446,27 +411,33 @@ elif pilihan_menu == "🔍 Cek Detail & Check-Out":
                      d["id"] == input_pencarian), None)
         
         if tamu:
-            # Di sini sisa kurang bayar dihitung otomatis (Total Biaya dikurang nominal yang sudah di-DP-kan)
             sisa_bayar_kamar = tamu["total_biaya"] - tamu["sudah_dibayar"]
-            # Grand total pelunasan akhir digabung sama hutang room service makanan (kalau ada)
             grand_total_checkout = sisa_bayar_kamar + tamu["food_charge"]
             
             st.markdown(f"""
             <div class="card">
                 <h4>🧾 ID Booking: {tamu['id']}</h4>
                 <p>👤 <b>Nama Tamu:</b> {tamu['nama']}<br>
-                🚪 <b>Nomor Kamar:</b> {tamu['kamar']} ({tamu['tipe']})<br>
-                📅 <b>Periode Menginap:</b> {tamu['check_in']} s/d {tamu['check_out']}<br>
-                📊 <b>Status Pembayaran Awal:</b> {tamu['status_bayar']}<br>
-                💰 <b>Total Tarif Kamar Keseluruhan:</b> Rp {int(tamu['total_biaya']):,}<br>
-                💳 <b>Nominal Yang Sudah Dibayarkan:</b> Rp {int(tamu['sudah_dibayar']):,}</p>
-                <hr style="border-top:1px dashed #ccc;">
-                <h4><b>📋 Rincian Tagihan Tambahan di Hotel (Saat Ini):</b></h4>
-                <p>➕ Sisa Kurang Bayar Kamar Utama: <b>Rp {int(sisa_bayar_kamar):,}</b><br>
-                ➕ Akumulasi Tagihan Kuliner (Room Service): <b>Rp {int(tamu['food_charge']):,}</b></p>
-                <h3 style="color:#E91E63;"><b>Grand Total Pelunasan Check-Out: Rp {int(grand_total_checkout):,}</b></h3>
+                💰 <b>Total Tarif Kamar:</b> Rp {int(tamu['total_biaya']):,}<br>
+                💳 <b>Sudah Dibayar (DP/Lunas):</b> Rp {int(tamu['sudah_dibayar']):,}</p>
+                <hr>
+                <h4><b>📋 Rincian Pelunasan Akhir:</b></h4>
             </div>
             """, unsafe_allow_html=True)
+
+            # Struk pelunasan yang sangat jelas untuk tamu
+            struk_pelunasan = f"""
+    ================================================
+            STRUK PELUNASAN & CHECK-OUT
+    ================================================
+    Sisa Kamar    : Rp {int(sisa_bayar_kamar):,}
+    Tagihan Makan : Rp {int(tamu['food_charge']):,}
+    ------------------------------------------------
+    TOTAL HARUS DIBAYAR SEKARANG: Rp {int(grand_total_checkout):,}
+    ================================================
+            Terima Kasih Atas Kunjungan Anda!
+    """
+            st.code(struk_pelunasan, language="text")
             
             # Tombol eksekusi check-out, balikin kamar jadi ijo (Tersedia) dan pindahin data ke arsip histori
             if st.button(f"Konfirmasi Pelunasan & Proses Check-Out Selesai", type="primary"):

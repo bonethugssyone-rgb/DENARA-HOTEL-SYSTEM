@@ -269,18 +269,18 @@ elif pilihan_menu == "🗺️ Denah Kamar":
 elif pilihan_menu == "💳 Pembayaran Tiket":
     st.title("💳 Menu Pembayaran Billing Kamar")
     # --- LOGIKA AUTO-CANCEL (Taruh di paling atas menu Pembayaran Tiket) ---
-if "proses_checkout" in st.session_state:
-    data = st.session_state.proses_checkout
-    selisih_menit = (datetime.now() - data["waktu_booking"]).total_seconds() / 60
-    
-    if selisih_menit > 5:
-        # Hapus sesi checkout karena sudah kadaluarsa
-        del st.session_state.proses_checkout
-        st.error("⚠️ Waktu pembayaran Anda sudah habis (5 menit). Reservasi dibatalkan otomatis agar kamar bisa dipesan tamu lain.")
-        st.stop() # Menghentikan proses agar tidak bisa lanjut bayar
-    else:
-        sisa_waktu = 5 - int(selisih_menit)
-        st.warning(f"⏳ Harap selesaikan pembayaran dalam **{sisa_waktu} menit** lagi.")
+    if "proses_checkout" in st.session_state:
+        data = st.session_state.proses_checkout
+        selisih_menit = (datetime.now() - data["waktu_booking"]).total_seconds() / 60
+        
+        if selisih_menit > 5:
+            # Hapus sesi checkout karena sudah kadaluarsa
+            del st.session_state.proses_checkout
+            st.error("⚠️ Waktu pembayaran Anda sudah habis (5 menit). Reservasi dibatalkan otomatis agar kamar bisa dipesan tamu lain.")
+            st.stop() # Menghentikan proses agar tidak bisa lanjut bayar
+        else:
+            sisa_waktu = 5 - int(selisih_menit)
+            st.warning(f"⏳ Harap selesaikan pembayaran dalam **{sisa_waktu} menit** lagi.")
 
     dt = st.session_state.proses_checkout
     # Ngitung berapa malam durasi menginap berdasarkan selisih tanggal check-in & check-out

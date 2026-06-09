@@ -153,7 +153,7 @@ if pilihan_menu == "🏠 Dashboard":
             st.markdown(f'<div class="review-box"><b>{u["nama"]}</b> (⭐ {u["rating"]})<br><small>"{u["komentar"]}"</small></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 2. RESERVASI BARU (VERSI ELEGAN) ---
+# --- 2. RESERVASI BARU (VERSI PROFESIONAL & ELEGAN) ---
 elif pilihan_menu == "📝 Reservasi Baru":
     st.title("📝 Registrasi Menginap (Reservasi Baru)")
     col_kiri, col_kanan = st.columns([1.5, 1])
@@ -167,19 +167,21 @@ elif pilihan_menu == "📝 Reservasi Baru":
         # 1. Pilih Tipe Kamar
         pilihan_tipe = st.selectbox("Mau Kamar Tipe Apa?", list(TARIF_KAMAR.keys()))
         
-        # 2. Filter kamar hanya yang "Tersedia" saja
-        kamar_kosong_tipe = [k for k in st.session_state.kamar_data 
-                            if k["Tipe Kamar"] == pilihan_tipe and k["Status"] == "🟩 Tersedia"]
+        # 2. Ambil semua kamar sesuai tipe yang dipilih
+        kamar_sesuai_tipe = [k for k in st.session_state.kamar_data if k["Tipe Kamar"] == pilihan_tipe]
         
-        # 3. Pilihan No Kamar elegan (hanya angka)
-        if kamar_kosong_tipe:
-            pilihan_no_kamar = st.selectbox("Pilih Nomor Kamar:", [k['No Kamar'] for k in kamar_kosong_tipe])
-            # Mengambil detail kamar berdasarkan nomor yang dipilih
-            kamar_terpilih = next(k for k in kamar_kosong_tipe if k['No Kamar'] == pilihan_no_kamar)
+        # 3. Pilihan No Kamar elegan (menampilkan nomor kamar)
+        pilihan_no_kamar = st.selectbox("Pilih Nomor Kamar:", [k['No Kamar'] for k in kamar_sesuai_tipe])
+        
+        # Cari detail kamar terpilih
+        kamar_terpilih = next(k for k in kamar_sesuai_tipe if k['No Kamar'] == pilihan_no_kamar)
+        
+        # 4. Cek status kamar secara real-time
+        if "Tersedia" in kamar_terpilih["Status"]:
             st.success("Status: Kamar ini tersedia untuk dipesan.")
         else:
-            st.error("Mohon maaf, semua kamar tipe ini sedang di-booking.")
-            kamar_terpilih = None
+            st.error("Status: Mohon maaf, kamar ini sudah dibooking.")
+            kamar_terpilih = None # Kunci agar tidak bisa lanjut ke proses selanjutnya
 
         st.markdown("**Fasilitas Yang Bakal Kamu Dapet:**")
         for fas in FASILITAS_KAMAR[pilihan_tipe]:
@@ -204,13 +206,12 @@ elif pilihan_menu == "📝 Reservasi Baru":
         # ... (Logika checkbox addons tetap sama)
         
         if st.button("Booking & Lanjut Ke Pembayaran ➡️", type="primary"):
-            if not kamar_terpilih:
-                st.error("Pilih kamar yang tersedia terlebih dahulu!")
+            if kamar_terpilih is None:
+                st.error("Kamar tidak bisa dipilih karena sudah dibooking. Pilih nomor kamar lain!")
             elif not nama or tgl_out <= tgl_in:
                 st.error("Lengkapi data diri dan tanggal dengan benar.")
             else:
                 # Logika simpan data ke session_state.proses_checkout
-                # ... (sesuaikan dengan kode asli Anda)
                 st.session_state.proses_checkout = {
                     "id_invoice": f"RSV-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                     "nama": nama, "hp": hp, "email": email, "kamar": kamar_terpilih,

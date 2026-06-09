@@ -183,7 +183,7 @@ elif pilihan == "➕ Reservasi Baru":
         tipe_pilih = st.selectbox("Tipe Kamar", list(TARIF_KAMAR.keys()))
         
         # Cari alokasi kamar kosong dari array secara dinamis
-        kamar_tersedia = [k for k in st.session_state.kamar_data if k["Tipe"] == tipe_pilih and k["Status"] == "🟩 Tersedia"]
+        kamar_tersedia = [k for k in st.session_state.kamar_data if k["tipe"] == tipe_pilih and k["Status"] == "🟩 Tersedia"]
         
         if not kamar_tersedia:
             st.error("⚠️ Maaf, Kamar tipe ini sedang penuh!")

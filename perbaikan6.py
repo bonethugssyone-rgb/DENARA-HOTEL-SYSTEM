@@ -639,7 +639,7 @@ elif pilihan_menu == "⭐ Ulasan Kepuasan":
 elif pilihan_menu == "❓ Pusat Bantuan":
     st.title("🛟 FAQ - Pusat Bantuan Informasi")
     # Pertanyaan populer seputar kebijakan hotel yang dikemas rapi pakai fitur expander Streamlit
-    with st.expander("⏱️ Jam Berapa Batas Waktu Check-In & Check-Out Standard?"):
+    with st.expander("⏱️ Jam Berapa Batsas Waktu Check-In & Check-Out Standard?"):
         st.write("Masuk kamar jam 14:00 WIB yaa, kalau keluar maksimal jam 12:00 WIB.")
     with st.expander("💳 Bisa Bayar Pake QRIS Atau E-Wallet Gak?"):
         st.write("Bisa bgt! Kita nerima Dana, Gopay, Ovo, ShopeePay, sama Transfer VA Bank.")

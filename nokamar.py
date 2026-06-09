@@ -376,9 +376,9 @@ elif pilihan_menu == "📝 Reservasi Baru":
                 
             if kamar_cocok:
                 st.success(f"✅ Kamar otomatis: {kamar_cocok['No Kamar']}")
-                else:
-                    st.error("❌ Kamar penuh")
-                    addons = []
+            else:
+                st.error("❌ Kamar penuh")
+                addons = []
             
 
             if kamar_cocok:

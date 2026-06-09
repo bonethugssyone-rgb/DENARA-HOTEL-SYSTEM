@@ -212,13 +212,14 @@ elif pilihan_menu == "📝 Reservasi Baru":
                 st.error("Lengkapi data diri dan tanggal dengan benar.")
             else:
                 # Logika simpan data ke session_state.proses_checkout
-                st.session_state.proses_checkout = {
-                    "id_invoice": f"RSV-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                    "nama": nama, "hp": hp, "email": email, "kamar": kamar_terpilih,
-                    "tipe": pilihan_tipe, "check_in": str(tgl_in), "check_out": str(tgl_out),
-                    "biaya_ekstra_total": 0 
-                }
-                st.success("Data tersimpan, silakan lanjut ke menu 'Pembayaran Tiket'.")
+               st.session_state.proses_checkout = {
+                   "id_invoice": f"RSV-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                   "nama": nama, "hp": hp, "email": email, "kamar": kamar_terpilih,
+                   "tipe": pilihan_tipe, "check_in": str(tgl_in), "check_out": str(tgl_out),
+                   "biaya_ekstra_total": 0,
+                   "waktu_booking": datetime.now() # TAMBAHKAN INI UNTUK TRACKING WAKTU
+    }
+    st.success("Data tersimpan! Harap selesaikan pembayaran dalam 5 menit.")
 # --- 3. KATALOG KAMAR ---
 elif pilihan_menu == "🏨 Katalog Kamar":
     st.title("🏨 Katalog Pilihan & Spesifikasi Eksklusif Kamar")
@@ -267,10 +268,19 @@ elif pilihan_menu == "🗺️ Denah Kamar":
 # --- 5. PEMBAYARAN TIKET RESERVASI ---
 elif pilihan_menu == "💳 Pembayaran Tiket":
     st.title("💳 Menu Pembayaran Billing Kamar")
-    # Validasi biar gak ada tamu ilegal yang masuk menu ini tanpa ngisi form reservasi dulu
-    if "proses_checkout" not in st.session_state:
-        st.warning("Belum ada antrian kamar yang mau dibayar nih. Buka menu 'Reservasi Baru' dulu ya.")
-        st.stop()
+    # --- LOGIKA AUTO-CANCEL (Taruh di paling atas menu Pembayaran Tiket) ---
+if "proses_checkout" in st.session_state:
+    data = st.session_state.proses_checkout
+    selisih_menit = (datetime.now() - data["waktu_booking"]).total_seconds() / 60
+    
+    if selisih_menit > 5:
+        # Hapus sesi checkout karena sudah kadaluarsa
+        del st.session_state.proses_checkout
+        st.error("⚠️ Waktu pembayaran Anda sudah habis (5 menit). Reservasi dibatalkan otomatis agar kamar bisa dipesan tamu lain.")
+        st.stop() # Menghentikan proses agar tidak bisa lanjut bayar
+    else:
+        sisa_waktu = 5 - int(selisih_menit)
+        st.warning(f"⏳ Harap selesaikan pembayaran dalam **{sisa_waktu} menit** lagi.")
 
     dt = st.session_state.proses_checkout
     # Ngitung berapa malam durasi menginap berdasarkan selisih tanggal check-in & check-out

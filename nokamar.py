@@ -387,6 +387,10 @@ elif pilihan_menu == "💳 Pembayaran Tiket":
             del st.session_state.proses_checkout # Hapus data temporary biar bersih
             st.success("Pembayaran Berhasil Diterima! Kamar aman dipesan. Sisa tagihan (jika ada) akan dilunasi saat check-out.")
             st.rerun()
+            # refresh otomatis agar sisa waktu detik terlihat berjalan
+            import time
+            time.sleep(1)
+            st.rerun()
 
 # --- 6. CEK DETAIL & CHECK-OUT MANDIRI ---
 elif pilihan_menu == "🔍 Cek Detail & Check-Out":

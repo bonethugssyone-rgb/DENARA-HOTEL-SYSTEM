@@ -220,8 +220,20 @@ elif pilihan_menu == "🏨 Katalog Kamar":
 # --- 4. DENAH KAMAR ---
 elif pilihan_menu == "🗺️ Denah Kamar":
     st.title("🗺️ Map Letak Kamar Hotel Lantai 1 s/d 5")
+    
     for lt in range(1, 6):
-        st.subheader(f"🏢 Lantai {lt}")
+        # Nyocokin teks nama lantai khusus buat tipe kamar lantai 1-4 sesuai request user
+        if lt == 1:
+            st.subheader("🏢 Lantai 1 — ROOM STANDARD")
+        elif lt == 2:
+            st.subheader("🏢 Lantai 2 — SUPERIOR ROOM")
+        elif lt == 3:
+            st.subheader("🏢 Lantai 3 — DELUXE ROOM")
+        elif lt == 4:
+            st.subheader("🏢 Lantai 4 — SUITE ROOM")
+        else:
+            st.subheader(f"🏢 Lantai {lt}") # Biar lantai 5 tetap aman terkendali
+            
         kamar_lantai = [k for k in st.session_state.kamar_data if k["No Kamar"].startswith(str(lt))]
         cols = st.columns(6)
         for idx, detail in enumerate(kamar_lantai):

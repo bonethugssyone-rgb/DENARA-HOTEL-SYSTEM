@@ -153,7 +153,7 @@ if pilihan_menu == "🏠 Dashboard":
             st.markdown(f'<div class="review-box"><b>{u["nama"]}</b> (⭐ {u["rating"]})<br><small>"{u["komentar"]}"</small></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 2. RESERVASI BARU (REVISI FILTER KAMAR) ---
+# --- 2. RESERVASI BARU (VERSI ELEGAN) ---
 elif pilihan_menu == "📝 Reservasi Baru":
     st.title("📝 Registrasi Menginap (Reservasi Baru)")
     col_kiri, col_kanan = st.columns([1.5, 1])
@@ -167,17 +167,18 @@ elif pilihan_menu == "📝 Reservasi Baru":
         # 1. Pilih Tipe Kamar
         pilihan_tipe = st.selectbox("Mau Kamar Tipe Apa?", list(TARIF_KAMAR.keys()))
         
-        # 2. Filter kamar hanya yang "Tersedia" saja agar tidak bisa dipilih jika sudah booking
+        # 2. Filter kamar hanya yang "Tersedia" saja
         kamar_kosong_tipe = [k for k in st.session_state.kamar_data 
                             if k["Tipe Kamar"] == pilihan_tipe and k["Status"] == "🟩 Tersedia"]
         
+        # 3. Pilihan No Kamar elegan (hanya angka)
         if kamar_kosong_tipe:
-            opsi_kamar = {f"{k['No Kamar']} ({k['Status']})": k for k in kamar_kosong_tipe}
-            pilihan_no_kamar = st.selectbox("Pilih Nomor Kamar:", list(opsi_kamar.keys()))
-            kamar_terpilih = opsi_kamar[pilihan_no_kamar]
-            st.success(f"Status Kamar: **{kamar_terpilih['Status']}** ✅")
+            pilihan_no_kamar = st.selectbox("Pilih Nomor Kamar:", [k['No Kamar'] for k in kamar_kosong_tipe])
+            # Mengambil detail kamar berdasarkan nomor yang dipilih
+            kamar_terpilih = next(k for k in kamar_kosong_tipe if k['No Kamar'] == pilihan_no_kamar)
+            st.success("Status: Kamar ini tersedia untuk dipesan.")
         else:
-            st.error(f"Mohon maaf, semua kamar tipe {pilihan_tipe} saat ini sedang penuh.")
+            st.error("Mohon maaf, semua kamar tipe ini sedang di-booking.")
             kamar_terpilih = None
 
         st.markdown("**Fasilitas Yang Bakal Kamu Dapet:**")
@@ -196,25 +197,25 @@ elif pilihan_menu == "📝 Reservasi Baru":
         elif jml_tamu <= 3: saran = "Superior Room"
         elif jml_tamu <= 4: saran = "Deluxe Room"
         else: saran = "Suite Room"
-        st.info(f"Karena kamu bawa {jml_tamu} orang, cocoknya pilih **{saran}**.")
+        st.info(f"Untuk {jml_tamu} orang, kami sarankan: **{saran}**.")
         
         st.markdown("---")
-        st.subheader("🎁 Mau Tambah Fasilitas Ekstra?")
+        st.subheader("🎁 Fasilitas Ekstra")
         # ... (Logika checkbox addons tetap sama)
         
         if st.button("Booking & Lanjut Ke Pembayaran ➡️", type="primary"):
-            if not kamar_kosong_tipe:
-                st.error("Tidak ada kamar yang tersedia untuk tipe ini.")
+            if not kamar_terpilih:
+                st.error("Pilih kamar yang tersedia terlebih dahulu!")
             elif not nama or tgl_out <= tgl_in:
-                st.error("Lengkapi data diri dan pastikan tanggal sudah benar!")
+                st.error("Lengkapi data diri dan tanggal dengan benar.")
             else:
                 # Logika simpan data ke session_state.proses_checkout
-                # ... (sesuaikan dengan perhitungan biaya di code asli Anda)
+                # ... (sesuaikan dengan kode asli Anda)
                 st.session_state.proses_checkout = {
                     "id_invoice": f"RSV-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                     "nama": nama, "hp": hp, "email": email, "kamar": kamar_terpilih,
                     "tipe": pilihan_tipe, "check_in": str(tgl_in), "check_out": str(tgl_out),
-                    "biaya_ekstra_total": 0 # Ganti sesuai hitungan addons Anda
+                    "biaya_ekstra_total": 0 
                 }
                 st.success("Data tersimpan, silakan lanjut ke menu 'Pembayaran Tiket'.")
 # --- 3. KATALOG KAMAR ---

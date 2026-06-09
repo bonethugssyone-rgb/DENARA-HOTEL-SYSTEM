@@ -279,7 +279,7 @@ elif pilihan_menu == "💳 Pembayaran Tiket":
     selisih_detik = (datetime.now() - dt["waktu_booking"]).total_secondS()
     batas_detik = 5 * 60 # 5 menit dalam detik
     
-    if selisih_detik > batas detik:
+    if selisih_detik > batas_detik:
         del st.session_state.proses_checkout # Hapus data checkout otomatis
         st.error("⚠️ Waktu pembayaran Anda sudah habis. Reservasi dibatalkan, Silakan buat ulang pesanan.")
         st.stop()

@@ -154,6 +154,7 @@ if pilihan_menu == "🏠 Dashboard":
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --- 2. RESERVASI BARU ---
+# --- 2. RESERVASI BARU ---
 elif pilihan_menu == "📝 Reservasi Baru":
     st.title("📝 Registrasi Menginap (Reservasi Baru)")
     col_kiri, col_kanan = st.columns([1.5, 1])
@@ -165,19 +166,21 @@ elif pilihan_menu == "📝 Reservasi Baru":
         email = st.text_input("Alamat Email", value="@gmail.com")
         pilihan_tipe = st.selectbox("Mau Kamar Tipe Apa?", list(TARIF_KAMAR.keys()))
         
-        # --- FITUR PILIH NO KAMAR ---
-        kamar_tersedia = [k for k in st.session_state.kamar_data if k["Tipe Kamar"] == pilihan_tipe]
-        pilihan_no_kamar = st.selectbox(
-            "Pilih Nomor Kamar:", 
-            [k["No Kamar"] + " (" + k["Status"] + ")" for k in kamar_tersedia]
-        )
-        no_kamar_terpilih = pilihan_no_kamar.split(" ")[0]
-        kamar_obj = next(k for k in st.session_state.kamar_data if k["No Kamar"] == no_kamar_terpilih)
+        # --- LOGIKA FILTER KAMAR ---
+        # Hanya tampilkan kamar yang "Tersedia" saja di dropdown
+        kamar_tersedia_list = [k for k in st.session_state.kamar_data 
+                               if k["Tipe Kamar"] == pilihan_tipe and k["Status"] == "🟩 Tersedia"]
         
-        if kamar_obj["Status"] == "🟩 Tersedia":
-            st.success(f"Status Kamar: **Tersedia**")
+        if kamar_tersedia_list:
+            pilihan_no_kamar = st.selectbox(
+                "Pilih Nomor Kamar (Hanya yang Tersedia):", 
+                [k["No Kamar"] for k in kamar_tersedia_list]
+            )
+            kamar_obj = next(k for k in st.session_state.kamar_data if k["No Kamar"] == pilihan_no_kamar)
+            st.success(f"Status Kamar {kamar_obj['No Kamar']}: **Tersedia**")
         else:
-            st.error(f"Status Kamar: **Sudah di-Booking**")
+            st.error(f"Maaf, semua kamar tipe {pilihan_tipe} saat ini sedang penuh/direservasi.")
+            kamar_obj = None # Penanda tidak ada kamar
         # -----------------------------
         
         st.markdown("**Fasilitas Yang Bakal Kamu Dapet:**")
@@ -191,45 +194,46 @@ elif pilihan_menu == "📝 Reservasi Baru":
 
     with col_kanan:
         st.subheader("🤖 Konfirmasi Pesanan")
-        if kamar_obj["Status"] != "🟩 Tersedia":
-            st.error("Maaf, kamar ini tidak bisa dipilih karena sudah terisi.")
         
-        st.markdown("---")
-        st.subheader("🎁 Mau Tambah Fasilitas Ekstra?")
-        addons = []
-        if st.checkbox("Sarapan Pagi Sepuasnya (+Rp 50.000)"): addons.append("Breakfast")
-        if st.checkbox("Antar Jemput Bandara (+Rp 150.000)"): addons.append("Airport Pickup")
-        if st.checkbox("Ekstra Kasur / Extra Bed (+Rp 200.000)"): addons.append("Extra Bed")
-        if st.checkbox("Akses VIP Executive Lounge (+Rp 250.000)"): addons.append("VIP Lounge")
-        if st.checkbox("Floating Breakfast di Kolam Renang (+Rp 120.000)"): addons.append("Floating Breakfast")
-        if st.checkbox("Paket Dekorasi Kamar (Birthday/Honeymoon) (+Rp 350.000)"): addons.append("Room Decoration")
-        if st.checkbox("Akses Layanan Netflix & Disney+ Premium (+Rp 30.000)"): addons.append("Streaming Apps")
-        if st.checkbox("Rental Skuter Listrik Seharian (+Rp 75.000)"): addons.append("Electric Scooter")
+        # Cek apakah ada kamar yang bisa dipesan
+        if kamar_obj:
+            st.markdown("---")
+            st.subheader("🎁 Mau Tambah Fasilitas Ekstra?")
+            addons = []
+            if st.checkbox("Sarapan Pagi Sepuasnya (+Rp 50.000)"): addons.append("Breakfast")
+            if st.checkbox("Antar Jemput Bandara (+Rp 150.000)"): addons.append("Airport Pickup")
+            if st.checkbox("Ekstra Kasur / Extra Bed (+Rp 200.000)"): addons.append("Extra Bed")
+            if st.checkbox("Akses VIP Executive Lounge (+Rp 250.000)"): addons.append("VIP Lounge")
+            if st.checkbox("Floating Breakfast di Kolam Renang (+Rp 120.000)"): addons.append("Floating Breakfast")
+            if st.checkbox("Paket Dekorasi Kamar (Birthday/Honeymoon) (+Rp 350.000)"): addons.append("Room Decoration")
+            if st.checkbox("Akses Layanan Netflix & Disney+ Premium (+Rp 30.000)"): addons.append("Streaming Apps")
+            if st.checkbox("Rental Skuter Listrik Seharian (+Rp 75.000)"): addons.append("Electric Scooter")
 
-        if st.button("Booking & Lanjut Ke Pembayaran ➡️", type="primary"):
-            if not nama or kamar_obj["Status"] != "🟩 Tersedia" or tgl_out <= tgl_in or email == "@gmail.com" or hp == "+62 ":
-                st.error("Mohon periksa kembali data diri, pastikan kamar yang dipilih tersedia, dan tanggal sudah benar.")
-            else:
-                biaya_extra_awal = (
-                    (50000 if "Late" in pilihan_late else 0) + 
-                    (50000 if "Breakfast" in addons else 0) + 
-                    (150000 if "Airport Pickup" in addons else 0) + 
-                    (200000 if "Extra Bed" in addons else 0) + 
-                    (250000 if "VIP Lounge" in addons else 0) +
-                    (120000 if "Floating Breakfast" in addons else 0) +
-                    (350000 if "Room Decoration" in addons else 0) +
-                    (30000 if "Streaming Apps" in addons else 0) +
-                    (75000 if "Electric Scooter" in addons else 0)
-                )
-                
-                st.session_state.proses_checkout = {
-                    "id_invoice": f"RSV-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                    "nama": nama, "hp": hp, "email": email, "kamar": kamar_obj,
-                    "tipe": pilihan_tipe, "check_in": str(tgl_in), "check_out": str(tgl_out),
-                    "add_on": addons, "late_checkout": pilihan_late, "biaya_ekstra_total": biaya_extra_awal
-                }
-                st.session_state.voucher_terpasang = "" 
-                st.success("Sip! Data udah kesimpen, gass ke sub-menu 'Pembayaran Tiket' buat memilih opsi pembayaran.")
+            if st.button("Booking & Lanjut Ke Pembayaran ➡️", type="primary"):
+                if not nama or tgl_out <= tgl_in or email == "@gmail.com" or hp == "+62 ":
+                    st.error("Lengkapi data diri Anda terlebih dahulu.")
+                else:
+                    # Menghitung biaya
+                    biaya_extra_awal = (
+                        (50000 if "Late" in pilihan_late else 0) + 
+                        (50000 if "Breakfast" in addons else 0) + 
+                        (150000 if "Airport Pickup" in addons else 0) + 
+                        (200000 if "Extra Bed" in addons else 0) + 
+                        (250000 if "VIP Lounge" in addons else 0) +
+                        (120000 if "Floating Breakfast" in addons else 0) +
+                        (350000 if "Room Decoration" in addons else 0) +
+                        (30000 if "Streaming Apps" in addons else 0) 
+                    )
+                    
+                    st.session_state.proses_checkout = {
+                        "id_invoice": f"RSV-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        "nama": nama, "hp": hp, "email": email, "kamar": kamar_obj,
+                        "tipe": pilihan_tipe, "check_in": str(tgl_in), "check_out": str(tgl_out),
+                        "add_on": addons, "late_checkout": pilihan_late, "biaya_ekstra_total": biaya_extra_awal
+                    }
+                    st.success("Sip! Data udah kesimpen, gass ke sub-menu 'Pembayaran Tiket' buat memilih opsi pembayaran.")
+        else:
+            st.warning("Silakan pilih tipe kamar lain yang tersedia.")
 # --- 3. KATALOG KAMAR ---
 elif pilihan_menu == "🏨 Katalog Kamar":
     st.title("🏨 Katalog Pilihan & Spesifikasi Eksklusif Kamar")

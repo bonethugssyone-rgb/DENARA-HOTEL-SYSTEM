@@ -217,8 +217,6 @@ elif pilihan_menu == "📝 Reservasi Baru":
                     "biaya_ekstra_total": 0 # Ganti sesuai hitungan addons Anda
                 }
                 st.success("Data tersimpan, silakan lanjut ke menu 'Pembayaran Tiket'.")
-                }
-                st.success("Data tersimpan, silakan lanjut ke menu 'Pembayaran Tiket'.")
 # --- 3. KATALOG KAMAR ---
 elif pilihan_menu == "🏨 Katalog Kamar":
     st.title("🏨 Katalog Pilihan & Spesifikasi Eksklusif Kamar")

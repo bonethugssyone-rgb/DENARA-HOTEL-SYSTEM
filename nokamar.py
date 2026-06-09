@@ -274,17 +274,20 @@ elif pilihan_menu == "💳 Pembayaran Tiket":
         st.warning("Belum ada antrian kamar yang mau dibayar nih. Buka menu 'Reservasi Baru' dulu ya.")
         st.stop()
 
-    # --- LOGIKA AUTO-CANCEL 5 MENIT ---
+    # --- LOGIKA AUTO-CANCEL 5 MENIT(DENGAN DETIK) ---
     dt = st.session_state.proses_checkout
-    selisih_menit = (datetime.now() - dt["waktu_booking"]).total_seconds() / 60
+    selisih_detik = (datetime.now() - dt["waktu_booking"]).total_secondS()
+    batas_detik = 5 * 60 # 5 menit dalam detik
     
-    if selisih_menit > 5:
+    if selisih_detik > batas detik:
         del st.session_state.proses_checkout # Hapus data checkout otomatis
-        st.error("⚠️ Waktu pembayaran Anda sudah habis (5 menit). Reservasi dibatalkan otomatis agar kamar bisa dipesan tamu lain. Silakan buat ulang pesanan.")
+        st.error("⚠️ Waktu pembayaran Anda sudah habis. Reservasi dibatalkan, Silakan buat ulang pesanan.")
         st.stop()
     else:
-        sisa_waktu = 5 - int(selisih_menit)
-        st.warning(f"⏳ Harap selesaikan pembayaran dalam **{sisa_waktu} menit** lagi.")
+        sisa_detik = batas_detik - int(selisih_detik)
+        menit_tersisa = sisa_detik // 60
+        detik_tersisa = sisa_detik % 60
+        st.warning(f"⏳ Harap Selesaikan Pembayaran Dalam : **{menit_tersisa} menit {detik_tersisa} detik** lagi.")
     # ----------------------------------
 
     # Ngitung berapa malam durasi menginap berdasarkan selisih tanggal check-in & check-out

@@ -268,13 +268,26 @@ elif pilihan_menu == "🗺️ Denah Kamar":
 # --- 5. PEMBAYARAN TIKET RESERVASI ---
 elif pilihan_menu == "💳 Pembayaran Tiket":
     st.title("💳 Menu Pembayaran Billing Kamar")
+    
     # Validasi biar gak ada tamu ilegal yang masuk menu ini tanpa ngisi form reservasi dulu
     if "proses_checkout" not in st.session_state:
         st.warning("Belum ada antrian kamar yang mau dibayar nih. Buka menu 'Reservasi Baru' dulu ya.")
         st.stop()
 
+    # --- LOGIKA AUTO-CANCEL 5 MENIT ---
     dt = st.session_state.proses_checkout
-            # Ngitung berapa malam durasi menginap berdasarkan selisih tanggal check-in & check-out
+    selisih_menit = (datetime.now() - dt["waktu_booking"]).total_seconds() / 60
+    
+    if selisih_menit > 5:
+        del st.session_state.proses_checkout # Hapus data checkout otomatis
+        st.error("⚠️ Waktu pembayaran Anda sudah habis (5 menit). Reservasi dibatalkan otomatis agar kamar bisa dipesan tamu lain. Silakan buat ulang pesanan.")
+        st.stop()
+    else:
+        sisa_waktu = 5 - int(selisih_menit)
+        st.warning(f"⏳ Harap selesaikan pembayaran dalam **{sisa_waktu} menit** lagi.")
+    # ----------------------------------
+
+    # Ngitung berapa malam durasi menginap berdasarkan selisih tanggal check-in & check-out
     malam = max(1, (datetime.strptime(dt["check_out"], "%Y-%m-%d") - datetime.strptime(dt["check_in"], "%Y-%m-%d")).days)
     harga_pokok = TARIF_KAMAR.get(dt["tipe"], 0) * malam
     biaya_extra = dt["biaya_ekstra_total"]
@@ -371,10 +384,6 @@ elif pilihan_menu == "💳 Pembayaran Tiket":
             del st.session_state.proses_checkout # Hapus data temporary biar bersih
             st.success("Pembayaran Berhasil Diterima! Kamar aman dipesan. Sisa tagihan (jika ada) akan dilunasi saat check-out.")
             st.rerun()
-
-# ==========================================
-# GANTI BAGIAN SUB-MENU CEK DETAIL & CHECK-OUT DENGAN KODE DI BAWAH INI
-# ==========================================
 
 # --- 6. CEK DETAIL & CHECK-OUT MANDIRI ---
 elif pilihan_menu == "🔍 Cek Detail & Check-Out":

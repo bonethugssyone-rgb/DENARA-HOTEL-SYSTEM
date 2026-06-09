@@ -281,11 +281,10 @@ elif pilihan_menu == "💳 Pembayaran Tiket":
         else:
             sisa_waktu = 5 - int(selisih_menit)
             st.warning(f"⏳ Harap selesaikan pembayaran dalam **{sisa_waktu} menit** lagi.")
-
-    dt = st.session_state.proses_checkout
-    # Ngitung berapa malam durasi menginap berdasarkan selisih tanggal check-in & check-out
+            
+            dt = st.session_state.proses_checkout
+            # Ngitung berapa malam durasi menginap berdasarkan selisih tanggal check-in & check-out
     malam = max(1, (datetime.strptime(dt["check_out"], "%Y-%m-%d") - datetime.strptime(dt["check_in"], "%Y-%m-%d")).days)
-    
     harga_pokok = TARIF_KAMAR.get(dt["tipe"], 0) * malam
     biaya_extra = dt["biaya_ekstra_total"]
     subtotal = harga_pokok + biaya_extra

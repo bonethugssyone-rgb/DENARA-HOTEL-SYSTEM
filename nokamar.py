@@ -276,7 +276,7 @@ elif pilihan_menu == "💳 Pembayaran Tiket":
 
     # --- LOGIKA AUTO-CANCEL 5 MENIT(DENGAN DETIK) ---
     dt = st.session_state.proses_checkout
-    selisih_detik = (datetime.now() - dt["waktu_booking"]).total_secondS()
+    selisih_detik = (datetime.now() - dt["waktu_booking"]).total_seconds()
     batas_detik = 5 * 60 # 5 menit dalam detik
     
     if selisih_detik > batas_detik:
